@@ -1,3 +1,4 @@
+import email
 from flask_restx import Namespace, Resource, fields
 from app.apis import MSG
 from app.db.students import StudentResource
@@ -155,3 +156,37 @@ class Student(Resource):
             return {MSG: "Student not found"}, HTTPStatus.NOT_FOUND
 
         return {MSG: "Student updated"}, HTTPStatus.OK
+    
+
+    @api.doc("Delete a specific student identified by email")
+    @api.response(
+        HTTPStatus.OK,
+        "Success",
+        api.model("Delete Student", {MSG: fields.String("Student deleted")}),
+    )
+    @api.response(
+        HTTPStatus.NOT_ACCEPTABLE,
+        "Invalid Email",
+        api.model("Delete Student: Not Acceptable", {MSG: fields.String("Invalid email")}),
+    )
+    @api.response(
+        HTTPStatus.NOT_FOUND,
+        "Student Not Found",
+        api.model("Delete Student: Not Found", {MSG: fields.String("Student could not be deleted")}),
+    )
+    def delete(self, email):
+        if not(isinstance(email, str) and len(email) > 0): 
+            return {
+                MSG: "Invalid email"
+            }, HTTPStatus.NOT_ACCEPTABLE
+        
+        student_resource = StudentResource() 
+        bool = student_resource.delete_student_by_email(email)
+        if not bool:
+            return {
+                MSG: "Student could not be deleted"
+            }, HTTPStatus.NOT_FOUND
+        return {
+            MSG: "Student deleted"
+        }, HTTPStatus.OK
+
